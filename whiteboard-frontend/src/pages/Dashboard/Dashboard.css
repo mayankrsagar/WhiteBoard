@@ -1,0 +1,65 @@
+.offcanvas-body ul {
+    list-style: none;
+    padding: 0;
+}
+
+.offcanvas-body li {
+    margin-bottom: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.offcanvas-body li:hover {
+    background-color: #f0f0f0;
+}
+
+.offcanvas-body a {
+    text-decoration: none;
+    color: #333;
+    display: flex;
+    align-items: center;
+}
+
+.offcanvas-body a:hover {
+    color: #007bff;
+}
+
+
+.offcanvas-body li .dropdown #dropdownMenuButton {
+    margin-left: 10px;
+}
+
+
+.profile {
+    margin-right: 30vh;
+}
+
+.btn2 {
+    background: none;
+    border: none;
+    color: #333;
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 12px 16px;
+}
+
+.btn2:focus,
+.btn2:hover {
+    background: none;
+    color: #007bff;
+}
+
+.dropdown-menu {
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-item {
+    color: #333;
+    font-size: 1rem;
+    /* Adjust font size as needed */
+}
+
+.dropdown-item:hover {
+    background-color: #f0f0f0;
+    color: #007bff;
+}
