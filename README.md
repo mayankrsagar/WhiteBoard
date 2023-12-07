@@ -3,7 +3,7 @@
 This is a collaborative whiteboard project designed for real-time drawing and sharing among users. It includes authentication functionalities, a home page, a dashboard, a profile section, and a live whiteboard room for sharing and collaborative drawing.
 
 ## Features
-- **Authentication:** Allows users to register and login securely.
+- **Authentication:** Allows users to register and log in securely.
 - **Home:** Provides an initial landing page for users.
 - **Dashboard:** Offers a user dashboard for managing activities.
 - **Profile:** Includes a user profile section.
@@ -15,7 +15,7 @@ This is a collaborative whiteboard project designed for real-time drawing and sh
 ### Frontend (Whiteboard Frontend)
 1. Clone the repository:
     ```bash
-    git clone https://github.com/your-username/whiteboard-frontend.git
+    git clone https://github.com/SiddharthChitrala/Whiteboard-Application.git
     ```
 2. Navigate to the `whiteboard-frontend` directory:
     ```bash
@@ -57,14 +57,6 @@ This is a collaborative whiteboard project designed for real-time drawing and sh
 - **Database:** Blob storage for saving canvas images in user profiles.
 
 ## Contributors
-- [Your Name](link-to-profile) - Role
-
-## License
-This project is licensed under the [MIT License](link-to-license).
-
-## Acknowledgements
-- Any credits or acknowledgements for libraries, tutorials, or resources used in the project.
-
----
+- [Siddharth Chitrala](https://github.com/SiddharthChitrala) - Role
 
 Feel free to adjust the sections, add specific details, or provide additional information as needed to better suit your project's requirements and contributors.
