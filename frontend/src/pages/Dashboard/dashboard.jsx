@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 
-import axios from "axios";
+import { Link } from "react-router-dom";
 
+import api from "../../../utils/axios";
 import imagePaths from "../../assets/img/imagePaths";
 
 export default function Dashboard() {
@@ -33,9 +34,7 @@ export default function Dashboard() {
 
     const fetchUserImages = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:5000/images/${userId}`
-        );
+        const response = await api.get(`/images`);
         setImages(response.data.images || []);
       } catch (error) {
         console.error("Error fetching images:", error);
@@ -45,10 +44,8 @@ export default function Dashboard() {
 
     const fetchUserProfile = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:5000/profile/${userId}`
-        );
-        setUsername(response.data.username || "");
+        const response = await api.get(`users/profile`);
+        setUsername(response.data.user.username || "");
         setEmail(response.data.email || "");
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -63,10 +60,8 @@ export default function Dashboard() {
 
   const deleteImage = async (filename) => {
     try {
-      await axios.delete(`http://localhost:5000/image/${filename}/${userId}`);
-      const response = await axios.get(
-        `http://localhost:5000/images/${userId}`
-      );
+      await api.delete(`/images/${filename}`);
+      const response = await api.get(`/images`);
       setImages(response.data.images || []);
     } catch (error) {
       console.error("Error deleting image:", error);
@@ -78,6 +73,7 @@ export default function Dashboard() {
     setUserId("");
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
+    localStorage.clear();
     window.location.reload();
   };
 
@@ -139,10 +135,12 @@ export default function Dashboard() {
             >
               <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zM11 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m.5 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1z" />
             </svg>
-            <div>
-              <div className="font-semibold">Profile</div>
+            <Link to="/profile" className="block">
+              <div className="font-semibold text-base text-blue-600 hover:underline">
+                Profile
+              </div>
               <div className="text-xs text-gray-500">View your account</div>
-            </div>
+            </Link>
           </div>
 
           <button

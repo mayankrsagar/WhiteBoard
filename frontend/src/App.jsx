@@ -1,3 +1,4 @@
+// src/App.jsx
 import React, { useEffect, useState } from "react";
 
 import {
@@ -9,13 +10,15 @@ import {
 
 import api from "../utils/axios";
 import ProtectedRoute from "../utils/ProtectedRoute";
+import PublicOnlyRoute from "../utils/PublicOnlyRoute";
 import Login from "./Auth/Login/login";
 import Register from "./Auth/Register/Registration";
 import Home from "./Components/Home";
+import Navbar from "./Components/Navbar";
 /* ----------  NAVBAR  ---------- */
-import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard/dashboard";
 import Main from "./pages/main/main";
+import Profile from "./pages/Profile";
 import ClientRoom from "./pages/Room/ClientRoom";
 import JoinCreateRoom from "./pages/Room/JoinCreateRoom";
 
@@ -24,6 +27,7 @@ function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [userId, setUserId] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [username, setUsername] = useState("");
 
   /* -------  MOUNT AUTH CHECK  ------- */
   useEffect(() => {
@@ -34,6 +38,7 @@ function App() {
         if (!ignore) {
           setLoggedIn(true);
           setUserId(data.user._id);
+          setUsername(data.user.username);
         }
       } catch {
         if (!ignore) setLoggedIn(false);
@@ -44,9 +49,18 @@ function App() {
 
   /* -------  LOGOUT  ------- */
   const handleLogout = async () => {
-    await api.post("/auth/logout");
+    try {
+      await api.post("/auth/logout");
+      // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      // swallow — still proceed to clear local state / redirect
+      // optionally show user a toast or console.warn(err);
+    }
     setLoggedIn(false);
     setUserId("");
+    localStorage.clear();
+    // use a full-page redirect (safe without useNavigate)
+    window.location.href = "/login";
   };
 
   /* ==========================================
@@ -58,6 +72,7 @@ function App() {
         <Navbar
           loggedIn={loggedIn}
           userId={userId}
+          username={username}
           mobileOpen={mobileOpen}
           setMobileOpen={setMobileOpen}
           onLogout={handleLogout}
@@ -68,9 +83,20 @@ function App() {
 
           <Route
             path="/login"
-            element={<Login setLoggedIn={setLoggedIn} setUserId={setUserId} />}
+            element={
+              <PublicOnlyRoute>
+                <Login setLoggedIn={setLoggedIn} setUserId={setUserId} />
+              </PublicOnlyRoute>
+            }
           />
-          <Route path="/register" element={<Register />} />
+          <Route
+            path="/register"
+            element={
+              <PublicOnlyRoute>
+                <Register />
+              </PublicOnlyRoute>
+            }
+          />
 
           {/* ======  PROTECTED  ====== */}
           <Route
@@ -105,7 +131,15 @@ function App() {
               </ProtectedRoute>
             }
           />
-
+          {/* in App.jsx protected routes */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate replace to="/" />} />
         </Routes>
       </div>

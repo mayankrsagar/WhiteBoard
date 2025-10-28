@@ -10,7 +10,8 @@ const __dirname = dirname(__filename);
 
 export async function getUserImages(req, res, next) {
   try {
-    const user = await User.findById(req.params.userId).select("images");
+    const userid = req.user.id || req.user._id;
+    const user = await User.findById(userid).select("images");
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -22,7 +23,8 @@ export async function getUserImages(req, res, next) {
 
 export async function deleteImage(req, res, next) {
   try {
-    const { filename, userId } = req.params;
+    const userId = req.user.id || req.user._id;
+    const { filename } = req.params;
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });

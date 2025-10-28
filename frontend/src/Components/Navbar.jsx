@@ -3,7 +3,15 @@ import React from "react";
 
 import { Link } from "react-router-dom";
 
-const Navbar = ({ loggedIn, userId, mobileOpen, setMobileOpen, onLogout }) => {
+const Navbar = ({
+  loggedIn,
+  // eslint-disable-next-line no-unused-vars
+  userId,
+  mobileOpen,
+  setMobileOpen,
+  onLogout,
+  username,
+}) => {
   /* -------------  LINK DATA  ------------- */
   const publicLinks = [
     { label: "Home", to: "/" },
@@ -24,10 +32,12 @@ const Navbar = ({ loggedIn, userId, mobileOpen, setMobileOpen, onLogout }) => {
       }`}
     >
       <span className={mobile ? "" : "hidden sm:inline"}>
-        {userId.slice(-6)}
+        {/* {userId.slice(-6)} */}
+        {username}
       </span>
       <div className="w-6 h-6 rounded-full bg-indigo-500 grid place-items-center font-bold text-xs uppercase">
-        {userId.slice(-1)}
+        {/* {userId.slice(-1)} */}
+        {username.slice(0, 1)}
       </div>
     </div>
   );

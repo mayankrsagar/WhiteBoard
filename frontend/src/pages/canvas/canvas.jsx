@@ -93,12 +93,50 @@ const Canvas = ({
   const handleMouseUp = () => setIsDrawing(false);
 
   /* ---------- redraw ---------- */
+  // useLayoutEffect(() => {
+  //   const canvas = canvasRef.current;
+  //   const roughCanvas = rough.canvas(canvas);
+  //   const context = ctx.current;
+
+  //   context.clearRect(0, 0, canvas.width, canvas.height);
+  //   elements.forEach((el) => {
+  //     if (el.element === "rect") {
+  //       roughCanvas.draw(
+  //         generator.rectangle(el.offsetX, el.offsetY, el.width, el.height, {
+  //           stroke: el.stroke,
+  //           roughness: 0,
+  //           strokeWidth: 5,
+  //         })
+  //       );
+  //     } else if (el.element === "line") {
+  //       roughCanvas.draw(
+  //         generator.line(el.offsetX, el.offsetY, el.width, el.height, {
+  //           stroke: el.stroke,
+  //           roughness: 0,
+  //           strokeWidth: 5,
+  //         })
+  //       );
+  //     } else if (el.element === "pencil") {
+  //       roughCanvas.linearPath(el.path, {
+  //         stroke: el.stroke,
+  //         roughness: 0,
+  //         strokeWidth: 5,
+  //       });
+  //     }
+  //   });
+
+  //   socket.emit("drawing", canvas.toDataURL());
+  // }, [elements, canvasRef, ctx, socket]);
+
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
-    const roughCanvas = rough.canvas(canvas);
     const context = ctx.current;
 
+    if (!canvas || !context) return; // 🛡️ Prevent null access
+
+    const roughCanvas = rough.canvas(canvas);
     context.clearRect(0, 0, canvas.width, canvas.height);
+
     elements.forEach((el) => {
       if (el.element === "rect") {
         roughCanvas.draw(

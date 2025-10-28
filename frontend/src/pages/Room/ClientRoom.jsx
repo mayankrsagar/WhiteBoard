@@ -5,19 +5,25 @@ const ClientRoom = ({ userNo, socket, setUsers, setUserNo }) => {
   const imgRef = useRef(null);
 
   useEffect(() => {
-    socket.on("message", (data) => alert(data.message));
-    socket.on("users", (data) => {
+    const handleMessage = (data) => alert(data.message);
+    const handleUsers = (data) => {
       setUsers(data);
       setUserNo(data.length);
-    });
-    socket.on("canvasImage", (data) => {
-      if (imgRef.current) imgRef.current.src = data;
-    });
+    };
+    const handleCanvasImage = (data) => {
+      if (imgRef.current) {
+        imgRef.current.src = data;
+      }
+    };
+
+    socket.on("message", handleMessage);
+    socket.on("users", handleUsers);
+    socket.on("canvasImage", handleCanvasImage);
 
     return () => {
-      socket.off("message");
-      socket.off("users");
-      socket.off("canvasImage");
+      socket.off("message", handleMessage);
+      socket.off("users", handleUsers);
+      socket.off("canvasImage", handleCanvasImage);
     };
   }, [socket, setUsers, setUserNo]);
 
@@ -32,12 +38,12 @@ const ClientRoom = ({ userNo, socket, setUsers, setUserNo }) => {
 
       {/* canvas viewer */}
       <div className="flex justify-center">
-        <div className="w-full max-w-5xl rounded-lg overflow-hidden border border-gray-700 shadow-lg">
+        <div className="w-full max-w-5xl rounded-lg overflow-hidden border border-gray-700 shadow-lg bg-white">
           <img
             ref={imgRef}
             src=""
-            alt="Canvas drawing"
-            className="w-full h-auto max-h-[32rem] md:max-h-[40rem] lg:max-h-[48rem] object-contain bg-white"
+            alt="Live canvas stream"
+            className="w-full h-auto max-h-[32rem] md:max-h-[40rem] lg:max-h-[48rem] object-contain"
           />
         </div>
       </div>

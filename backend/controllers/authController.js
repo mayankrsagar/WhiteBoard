@@ -43,6 +43,6 @@ export async function login(req, res, next) {
   }
 }
 
-export function logout(req, res) {
-  res.clearCookie("token").json({ message: "Logout successful" });
+export async function logout(req, res) {
+  await res.clearCookie("token").json({ message: "Logout successful" });
 }

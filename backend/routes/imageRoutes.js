@@ -4,7 +4,7 @@ import { deleteImage, getUserImages } from "../controllers/imageController.js";
 
 const router = express.Router();
 
-router.get("/:userId", getUserImages);
-router.delete("/:filename/:userId", deleteImage);
+router.get("/", getUserImages);
+router.delete("/:filename", deleteImage);
 
 export default router;
