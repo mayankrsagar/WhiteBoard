@@ -1,40 +1,29 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Navigate } from "react-router-dom";
 
-import api from "../utils/axios";
+import api from "./axios";
 
 const ProtectedRoute = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(null); // null = loading
+  const [isAuth, setIsAuth] = useState(null); // null = loading
 
   useEffect(() => {
-    const checkAuth = async () => {
+    let ignore = false;
+    (async () => {
       try {
-        const userId = localStorage.getItem("userId");
-        if (!userId) throw new Error("No user ID found");
-
-        const { data } = await api.get(`/users/profile/${userId}`);
-        if (data.username) setIsAuthenticated(true);
-        else setIsAuthenticated(false);
-      } catch (err) {
-        console.error("Auth check failed:", err);
-        console.log(err);
-        setIsAuthenticated(false);
+        await api.get("/users/profile"); // cookie only
+        if (!ignore) setIsAuth(true);
+      } catch {
+        if (!ignore) setIsAuth(false);
       }
-    };
-
-    checkAuth();
+    })();
+    return () => (ignore = true);
   }, []);
 
-  if (isAuthenticated === null) {
-    return (
-      <div className="min-h-screen grid place-items-center text-lg text-gray-700">
-        Loading…
-      </div>
-    );
-  }
+  if (isAuth === null)
+    return <div className="min-h-screen grid place-items-center">Loading…</div>;
 
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  return isAuth ? children : <Navigate to="/login" replace />;
 };
 
 export default ProtectedRoute;

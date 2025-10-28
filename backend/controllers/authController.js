@@ -32,8 +32,8 @@ export async function login(req, res, next) {
     // ✅ Set cookie
     res.cookie("token", jwtToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "None",
+      secure: process.env.NODE_ENV === "production", // ← remove the “v”
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -41,4 +41,8 @@ export async function login(req, res, next) {
   } catch (err) {
     next(err);
   }
+}
+
+export function logout(req, res) {
+  res.clearCookie("token").json({ message: "Logout successful" });
 }
