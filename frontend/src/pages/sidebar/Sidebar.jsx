@@ -1,48 +1,58 @@
-import React, { useRef } from "react";
+// src/components/Sidebar.jsx
+import React, { useState } from "react";
 
+// eslint-disable-next-line no-unused-vars
 const Sidebar = ({ users, user, socket }) => {
-  const sideBarRef = useRef(null);
+  const [open, setOpen] = useState(false);
 
-  const openSideBar = () => {
-    sideBarRef.current.style.left = 0;
-  };
-  const closeSideBar = () => {
-    sideBarRef.current.style.left = -100 + "%";
-  };
   return (
     <>
+      {/* trigger button */}
       <button
-        className="btn btn-dark btn-sm"
-        onClick={openSideBar}
-        style={{ position: "absolute", top: "15%", left: "5%" }}
+        onClick={() => setOpen(true)}
+        className="absolute top-1/4 left-4 z-40 px-3 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition"
       >
         Users
       </button>
-      <div
-        className="position-fixed pt-2 h-100 bg-dark"
-        ref={sideBarRef}
-        style={{
-          width: "150px",
-          left: "-100%",
-          transition: "0.3s linear",
-          zIndex: "9999",
-        }}
+
+      {/* backdrop */}
+      {open && (
+        <div
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 bg-black/40 z-40"
+        />
+      )}
+
+      {/* sliding panel */}
+      <aside
+        className={`fixed top-0 left-0 h-full w-64 bg-gray-900 text-white z-50 transform transition-transform duration-300 ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
-        <button
-          className="btn btn-block border-0 form-control rounded-0 btn-light"
-          onClick={closeSideBar}
-        >
-          Close
-        </button>
-        <div className="w-100 mt-5">
-          {users.map((usr, index) => (
-            <p key={index} className="text-white text-center py-2">
-              {usr.username}
-              {usr.id === socket.id && " - (You)"}
-            </p>
-          ))}
+        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+          <h2 className="font-semibold">Online Users</h2>
+          <button
+            onClick={() => setOpen(false)}
+            className="text-gray-400 hover:text-white"
+          >
+            ✕
+          </button>
         </div>
-      </div>
+
+        <nav className="p-4 space-y-3">
+          {users.map((usr) => (
+            <div
+              key={usr.id}
+              className={`px-3 py-2 rounded-lg ${
+                usr.id === socket.id ? "bg-indigo-600" : "bg-gray-800"
+              }`}
+            >
+              {usr.username}
+              {usr.id === socket.id && " (You)"}
+            </div>
+          ))}
+        </nav>
+      </aside>
     </>
   );
 };

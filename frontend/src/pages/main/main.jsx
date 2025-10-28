@@ -1,14 +1,16 @@
+import "./style.css";
+
 import React, { useEffect, useState } from "react";
+
 import { ToastContainer } from "react-toastify";
 import io from "socket.io-client";
+
+import Room from "../canvas/Room";
 import ClientRoom from "../Room/ClientRoom";
 import JoinCreateRoom from "../Room/JoinCreateRoom";
 import Sidebar from "../sidebar/Sidebar";
-import Room from "../canvas/Room";
 
-import "./style.css";
-
-const server = "http://localhost:9000";
+const server = "http://localhost:5000";
 const connectionOptions = {
   "force new connection": true,
   reconnectionAttempts: "Infinity",
@@ -48,7 +50,7 @@ const Main = () => {
     if (roomJoined) {
       socket.emit("user-joined", user);
     }
-  }, [roomJoined,user]);
+  }, [roomJoined, user]);
 
   return (
     <div className="home">

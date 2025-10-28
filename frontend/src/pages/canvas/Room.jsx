@@ -1,6 +1,9 @@
+// src/pages/Room/Room.jsx
 import React, { useEffect, useRef, useState } from "react";
+
 import axios from "axios";
-import Canvas from "./canvas";
+
+import Canvas from "../canvas/Canvas";
 
 const Room = ({ userNo, socket, setUsers, setUserNo }) => {
   const canvasRef = useRef(null);
@@ -9,20 +12,19 @@ const Room = ({ userNo, socket, setUsers, setUserNo }) => {
   const [elements, setElements] = useState([]);
   const [history, setHistory] = useState([]);
   const [tool, setTool] = useState("pencil");
-  const userId = localStorage.getItem('userId');
-
+  const userId = localStorage.getItem("userId");
 
   useEffect(() => {
-    socket.on("message", (data) => {
-      alert(data.message);
-    });
-  }, [socket]);
-  useEffect(() => {
+    socket.on("message", (data) => alert(data.message));
     socket.on("users", (data) => {
       setUsers(data);
       setUserNo(data.length);
     });
-  }, [setUserNo, setUsers, socket]);
+    return () => {
+      socket.off("message");
+      socket.off("users");
+    };
+  }, [socket, setUsers, setUserNo]);
 
   const clearCanvas = () => {
     const canvas = canvasRef.current;
@@ -33,196 +35,147 @@ const Room = ({ userNo, socket, setUsers, setUserNo }) => {
   };
 
   const undo = () => {
-    setHistory((prevHistory) => [
-      ...prevHistory,
-      elements[elements.length - 1],
-    ]);
-    setElements((prevElements) =>
-      prevElements.filter((ele, index) => index !== elements.length - 1)
-    );
+    if (!elements.length) return;
+    const last = elements[elements.length - 1];
+    setHistory((h) => [...h, last]);
+    setElements((els) => els.slice(0, -1));
   };
-  const redo = () => {
-    setElements((prevElements) => [
-      ...prevElements,
-      history[history.length - 1],
-    ]);
-    setHistory((prevHistory) =>
-      prevHistory.filter((ele, index) => index !== history.length - 1)
-    );
-  };
-  const saveImageToLocal = () => {
-    const canvas = canvasRef.current;
-    const link = document.createElement("a");
 
+  const redo = () => {
+    if (!history.length) return;
+    const last = history[history.length - 1];
+    setElements((els) => [...els, last]);
+    setHistory((h) => h.slice(0, -1));
+  };
+
+  const saveImageToLocal = () => {
+    const link = document.createElement("a");
     link.download = "canvas_image.png";
-    link.href = canvas.toDataURL("image/png");
+    link.href = canvasRef.current.toDataURL("image/png");
     link.click();
   };
 
   const saveImageToDatabase = async () => {
-    const canvas = canvasRef.current;
-    
-    // Convert canvas data to a PNG image data URL
-    const dataURL = canvas.toDataURL('image/png');
-  
     try {
-      // Create an image element
-      const img = new Image();
-  
-      // Set the image source to the canvas data URL
-      img.src = dataURL;
-  
-      // When the image loads, draw it onto a new canvas element
-      img.onload = () => {
-        const newCanvas = document.createElement('canvas');
-        newCanvas.width = img.width;
-        newCanvas.height = img.height;
-        
-        const ctx = newCanvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-  
-        // Convert the new canvas back to a Blob
-        newCanvas.toBlob(async (blob) => {
-          const formData = new FormData();
-          formData.append('file', blob, 'filename.png');
-          formData.append('userId', userId); // Replace userId with the actual user ID
-  
-          // Upload the Blob with axios
-          const uploadResponse = await axios.post('http://localhost:9000/upload', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
-  
-          console.log('Upload successful:', uploadResponse.data);
-          // Handle success
-        }, 'image/png'); // Set the image format (PNG in this case)
-      };
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      // Handle error
+      const dataURL = canvasRef.current.toDataURL("image/png"); // base64
+      const blob = await (await fetch(dataURL)).blob(); // convert to blob
+      const formData = new FormData();
+      formData.append("file", blob, "canvas.png");
+      formData.append("userId", userId);
+
+      const { data } = await axios.post(
+        "http://localhost:5000/upload",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      console.log("Upload successful:", data);
+      alert("Image saved to database!");
+    } catch (err) {
+      console.error(err);
+      alert("Save failed");
     }
   };
-  
 
   return (
-    <div className="container-fluid">
-      <div className="row">
-        <h1 className="display-5 pt-4 pb-3 text-center">
-          Users online:{userNo}
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      {/* header */}
+      <div className="text-center mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold">
+          Users online: {userNo}
         </h1>
       </div>
-      <div className="row justify-content-center align-items-center text-center py-2">
-        <div className="col-md-2">
-          <div className="color-picker d-flex align-items-center justify-content-center">
-            Color Picker : &nbsp;
-            <input
-              type="color"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="form-check form-check-inline">
-            <input
-              className="form-check-input"
-              type="radio"
-              name="tools"
-              id="pencil"
-              value="pencil"
-              checked={tool === "pencil"}
-              onClick={(e) => setTool(e.target.value)}
-              readOnly={true}
-            />
-            <label className="form-check-label" htmlFor="pencil">
-              Pencil
-            </label>
-          </div>
-          <div className="form-check form-check-inline">
-            <input
-              className="form-check-input"
-              type="radio"
-              name="tools"
-              id="line"
-              value="line"
-              checked={tool === "line"}
-              onClick={(e) => setTool(e.target.value)}
-              readOnly={true}
-            />
-            <label className="form-check-label" htmlFor="line">
-              Line
-            </label>
-          </div>
-          <div className="form-check form-check-inline">
-            <input
-              className="form-check-input"
-              type="radio"
-              name="tools"
-              id="rect"
-              value="rect"
-              checked={tool === "rect"}
-              onClick={(e) => setTool(e.target.value)}
-              readOnly={true}
-            />
-            <label className="form-check-label" htmlFor="rect">
-              Rectangle
-            </label>
-          </div>
+
+      {/* toolbar */}
+      <div className="flex flex-wrap items-center justify-center gap-4 mb-6">
+        {/* colour */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Colour:</span>
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
+          />
         </div>
 
-        <div className="col-md-2">
+        {/* tools */}
+        <div className="flex items-center gap-3">
+          {["pencil", "line", "rect"].map((t) => (
+            <label key={t} className="flex items-center gap-1 cursor-pointer">
+              <input
+                type="radio"
+                name="tool"
+                value={t}
+                checked={tool === t}
+                onChange={() => setTool(t)}
+                className="sr-only"
+              />
+              <span
+                className={`px-3 py-1 rounded-full text-sm capitalize border ${
+                  tool === t
+                    ? "bg-indigo-600 text-white border-indigo-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                {t}
+              </span>
+            </label>
+          ))}
+        </div>
+
+        {/* undo / redo */}
+        <div className="flex items-center gap-2">
           <button
-            type="button"
-            className="btn btn-outline-primary"
-            disabled={elements.length === 0}
-            onClick={() => undo()}
+            onClick={undo}
+            disabled={!elements.length}
+            className="px-3 py-1 rounded border border-gray-300 disabled:opacity-50 hover:bg-gray-100"
           >
             Undo
           </button>
-          &nbsp;&nbsp;
           <button
-            type="button"
-            className="btn btn-outline-primary ml-1"
-            disabled={history.length < 1}
-            onClick={() => redo()}
+            onClick={redo}
+            disabled={!history.length}
+            className="px-3 py-1 rounded border border-gray-300 disabled:opacity-50 hover:bg-gray-100"
           >
             Redo
-          </button>        &nbsp;&nbsp;
+          </button>
+        </div>
 
-        </div>
-        <div className="col-md-10">
-          <div className="row">
-            <div className="col color-picker d-flex align-items-center justify-content-center">
-              <input
-                type="button"
-                className="btn btn-danger"
-                value="clear canvas"
-                onClick={clearCanvas}
-              />
-            </div>
-            <div className="col d-flex align-items-center justify-content-center">
-              <button className="btn btn-primary" onClick={saveImageToLocal}>Download Image</button>
-            </div>
-            <div className="col d-flex align-items-center justify-content-center">
-              <button className="btn btn-primary" onClick={saveImageToDatabase}>
-                Save Image to Database
-              </button>
-            </div>
-          </div>
+        {/* actions */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={clearCanvas}
+            className="px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700"
+          >
+            Clear
+          </button>
+          <button
+            onClick={saveImageToLocal}
+            className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
+          >
+            Download
+          </button>
+          <button
+            onClick={saveImageToDatabase}
+            className="px-3 py-1 rounded bg-green-600 text-white hover:bg-green-700"
+          >
+            Save to DB
+          </button>
         </div>
       </div>
-      <div className="row">
-        <Canvas
-          canvasRef={canvasRef}
-          ctx={ctx}
-          color={color}
-          setElements={setElements}
-          elements={elements}
-          tool={tool}
-          socket={socket}
-        />
-      </div>
+
+      {/* canvas */}
+      <Canvas
+        canvasRef={canvasRef}
+        ctx={ctx}
+        color={color}
+        setElements={setElements}
+        elements={elements}
+        tool={tool}
+        socket={socket}
+      />
     </div>
   );
 };

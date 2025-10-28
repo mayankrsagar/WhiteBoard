@@ -1,7 +1,10 @@
+// src/pages/canvas/Canvas.jsx
 import React, { useEffect, useLayoutEffect, useState } from "react";
+
 import rough from "roughjs/bundled/rough.esm";
 
 const generator = rough.generator();
+
 const Canvas = ({
   canvasRef,
   ctx,
@@ -13,32 +16,37 @@ const Canvas = ({
 }) => {
   const [isDrawing, setIsDrawing] = useState(false);
 
+  /* ---------- canvas setup ---------- */
   useEffect(() => {
     const canvas = canvasRef.current;
-    canvas.height = window.innerHeight * 2;
-    canvas.width = window.innerWidth * 2;
-    canvas.style.width = `${window.innerWidth}px`;
-    canvas.style.height = `${window.innerHeight}px`;
-    const context = canvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
 
-    context.strokeWidth = 5;
-    context.scale(2, 2);
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    canvas.style.width = `${rect.width}px`;
+    canvas.style.height = `${rect.height}px`;
+
+    const context = canvas.getContext("2d");
+    context.scale(dpr, dpr);
     context.lineCap = "round";
+    context.lineJoin = "round";
     context.strokeStyle = color;
     context.lineWidth = 5;
     ctx.current = context;
   }, [canvasRef, color, ctx]);
 
   useEffect(() => {
-    ctx.current.strokeStyle = color;
-  }, [color, ctx]);
+    if (ctx.current) ctx.current.strokeStyle = color;
+  }, [color]);
 
+  /* ---------- mouse handlers ---------- */
   const handleMouseDown = (e) => {
     const { offsetX, offsetY } = e.nativeEvent;
 
     if (tool === "pencil") {
-      setElements((prevElements) => [
-        ...prevElements,
+      setElements((prev) => [
+        ...prev,
         {
           offsetX,
           offsetY,
@@ -48,119 +56,87 @@ const Canvas = ({
         },
       ]);
     } else {
-      setElements((prevElements) => [
-        ...prevElements,
+      setElements((prev) => [
+        ...prev,
         { offsetX, offsetY, stroke: color, element: tool },
       ]);
     }
-
     setIsDrawing(true);
   };
 
+  const handleMouseMove = (e) => {
+    if (!isDrawing) return;
+    const { offsetX, offsetY } = e.nativeEvent;
+
+    setElements((prev) =>
+      prev.map((el, i) => {
+        if (i !== prev.length - 1) return el;
+
+        if (tool === "rect") {
+          return {
+            ...el,
+            width: offsetX - el.offsetX,
+            height: offsetY - el.offsetY,
+          };
+        }
+        if (tool === "line") {
+          return { ...el, width: offsetX, height: offsetY };
+        }
+        if (tool === "pencil") {
+          return { ...el, path: [...el.path, [offsetX, offsetY]] };
+        }
+        return el;
+      })
+    );
+  };
+
+  const handleMouseUp = () => setIsDrawing(false);
+
+  /* ---------- redraw ---------- */
   useLayoutEffect(() => {
-    const roughCanvas = rough.canvas(canvasRef.current);
-    if (elements.length > 0) {
-      ctx.current.clearRect(
-        0,
-        0,
-        canvasRef.current.width,
-        canvasRef.current.height
-      );
-    }
-    elements.forEach((ele, i) => {
-      if (ele.element === "rect") {
+    const canvas = canvasRef.current;
+    const roughCanvas = rough.canvas(canvas);
+    const context = ctx.current;
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    elements.forEach((el) => {
+      if (el.element === "rect") {
         roughCanvas.draw(
-          generator.rectangle(ele.offsetX, ele.offsetY, ele.width, ele.height, {
-            stroke: ele.stroke,
+          generator.rectangle(el.offsetX, el.offsetY, el.width, el.height, {
+            stroke: el.stroke,
             roughness: 0,
             strokeWidth: 5,
           })
         );
-      } else if (ele.element === "line") {
+      } else if (el.element === "line") {
         roughCanvas.draw(
-          generator.line(ele.offsetX, ele.offsetY, ele.width, ele.height, {
-            stroke: ele.stroke,
+          generator.line(el.offsetX, el.offsetY, el.width, el.height, {
+            stroke: el.stroke,
             roughness: 0,
             strokeWidth: 5,
           })
         );
-      } else if (ele.element === "pencil") {
-        roughCanvas.linearPath(ele.path, {
-          stroke: ele.stroke,
+      } else if (el.element === "pencil") {
+        roughCanvas.linearPath(el.path, {
+          stroke: el.stroke,
           roughness: 0,
           strokeWidth: 5,
         });
       }
     });
-    const canvasImage = canvasRef.current.toDataURL();
-    socket.emit("drawing", canvasImage);
-  }, [canvasRef, ctx, elements, socket]);
 
-  const handleMouseMove = (e) => {
-    if (!isDrawing) {
-      return;
-    }
-    const { offsetX, offsetY } = e.nativeEvent;
+    socket.emit("drawing", canvas.toDataURL());
+  }, [elements, canvasRef, ctx, socket]);
 
-    if (tool === "rect") {
-      setElements((prevElements) =>
-        prevElements.map((ele, index) =>
-          index === elements.length - 1
-            ? {
-                offsetX: ele.offsetX,
-                offsetY: ele.offsetY,
-                width: offsetX - ele.offsetX,
-                height: offsetY - ele.offsetY,
-                stroke: ele.stroke,
-                element: ele.element,
-              }
-            : ele
-        )
-      );
-    } else if (tool === "line") {
-      setElements((prevElements) =>
-        prevElements.map((ele, index) =>
-          index === elements.length - 1
-            ? {
-                offsetX: ele.offsetX,
-                offsetY: ele.offsetY,
-                width: offsetX,
-                height: offsetY,
-                stroke: ele.stroke,
-                element: ele.element,
-              }
-            : ele
-        )
-      );
-    } else if (tool === "pencil") {
-      setElements((prevElements) =>
-        prevElements.map((ele, index) =>
-          index === elements.length - 1
-            ? {
-                offsetX: ele.offsetX,
-                offsetY: ele.offsetY,
-                path: [...ele.path, [offsetX, offsetY]],
-                stroke: ele.stroke,
-                element: ele.element,
-              }
-            : ele
-        )
-      );
-    }
-  };
-  const handleMouseUp = () => {
-    setIsDrawing(false);
-  };
-
+  /* ---------- render ---------- */
   return (
     <div
-      className="col-md-8 overflow-hidden border border-dark px-0 mx-auto mt-3"
-      style={{ height: "500px" }}
+      className="w-full h-[32rem] md:h-[40rem] lg:h-[48rem] overflow-hidden border border-gray-300 rounded-lg shadow-sm mx-auto mt-4"
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
-      <canvas ref={canvasRef} />
+      <canvas ref={canvasRef} className="w-full h-full" />
     </div>
   );
 };
