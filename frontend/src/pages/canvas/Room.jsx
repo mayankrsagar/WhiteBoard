@@ -1,12 +1,11 @@
-// src/pages/Room/Room.jsx
 import React, { useEffect, useRef, useState } from "react";
 
 import { toast } from "react-toastify";
 
 import api from "../../../utils/axios";
-import Canvas from "../canvas/Canvas";
+import Canvas from "./Canvas";
 
-const Room = ({ userNo, socket, setUsers, setUserNo }) => {
+const Room = ({ userNo, socket, setUsers, setUserNo, user }) => {
   const canvasRef = useRef(null);
   const ctx = useRef(null);
 
@@ -15,7 +14,6 @@ const Room = ({ userNo, socket, setUsers, setUserNo }) => {
   const [history, setHistory] = useState([]);
   const [tool, setTool] = useState("pencil");
 
-  /* ----------  socket listeners  ---------- */
   useEffect(() => {
     socket.on("message", (data) => toast.info(data.message));
     socket.on("users", (data) => {
@@ -28,12 +26,13 @@ const Room = ({ userNo, socket, setUsers, setUserNo }) => {
     };
   }, [socket, setUsers, setUserNo]);
 
-  /* ----------  canvas actions  ---------- */
   const clearCanvas = () => {
     const canvas = canvasRef.current;
     const context = ctx.current;
     if (!canvas || !context) return;
 
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
     context.fillStyle = "white";
     context.fillRect(0, 0, canvas.width, canvas.height);
     setElements([]);
@@ -66,22 +65,20 @@ const Room = ({ userNo, socket, setUsers, setUserNo }) => {
   const saveToDB = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     try {
       const blob = await new Promise((res) => canvas.toBlob(res, "image/png"));
       const form = new FormData();
       form.append("file", blob, "canvas.png");
-
       await api.post("/upload", form, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      toast.success("Canvas saved !");
+      toast.success("Canvas saved!");
+      alert("Canvas saved successfully!");
     } catch {
       toast.error("Save failed");
     }
   };
 
-  /* ----------  tailwind styles  ---------- */
   const toolBtn = (t) =>
     `px-4 py-2 rounded-lg text-sm capitalize transition border ${
       tool === t
@@ -94,94 +91,122 @@ const Room = ({ userNo, socket, setUsers, setUserNo }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* header */}
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-xl shadow p-4 mb-6">
-          <h1 className="text-xl md:text-2xl font-bold text-center">
+        <div className="bg-white rounded-xl shadow p-4 mb-6 text-center">
+          <h1 className="text-xl md:text-2xl font-bold">
             Users online: <span className="text-indigo-600">{userNo}</span>
           </h1>
         </div>
 
-        {/* toolbar */}
-        <div className="bg-white rounded-xl shadow p-4 mb-6">
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            {/* colour */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Colour</span>
-              <input
-                type="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                className="w-10 h-10 rounded-full border-2 border-gray-300 cursor-pointer"
-              />
-            </div>
-
-            {/* tools */}
-            <div className="flex items-center gap-2">
-              {["pencil", "line", "rect"].map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTool(t)}
-                  className={toolBtn(t)}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-
-            {/* undo / redo */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={undo}
-                disabled={!elements.length}
-                className={toolBtn("") + " disabled:opacity-50"}
-              >
-                Undo
-              </button>
-              <button
-                onClick={redo}
-                disabled={!history.length}
-                className={toolBtn("") + " disabled:opacity-50"}
-              >
-                Redo
-              </button>
-            </div>
-
-            {/* actions */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={clearCanvas}
-                className={actionBtn("bg-red-600", "hover:bg-red-700")}
-              >
-                Clear
-              </button>
-              <button
-                onClick={downloadImage}
-                className={actionBtn("bg-blue-600", "hover:bg-blue-700")}
-              >
-                Download
-              </button>
-              <button
-                onClick={saveToDB}
-                className={actionBtn("bg-green-600", "hover:bg-green-700")}
-              >
-                Save to DB
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* canvas */}
+        {/* main area: sidebar (controls) + canvas */}
         <div className="bg-white rounded-xl shadow p-4">
-          <Canvas
-            canvasRef={canvasRef}
-            ctx={ctx}
-            color={color}
-            setElements={setElements}
-            elements={elements}
-            tool={tool}
-            socket={socket}
-          />
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Sidebar: fixed width on md+, full width on small screens */}
+            <aside className="w-full md:w-80 flex-shrink-0">
+              <div className="flex flex-col gap-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">Tools</h2>
+                  <span className="text-sm text-gray-500">
+                    {user?.username || user?.userName || "You"}
+                  </span>
+                </div>
+
+                <div className="bg-gray-50 border rounded-lg p-4 flex flex-col gap-4">
+                  <label className="text-sm font-medium text-gray-700">
+                    Colour
+                  </label>
+                  <input
+                    type="color"
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
+                    className="w-12 h-12 rounded-full border-2 border-gray-300 cursor-pointer"
+                  />
+                </div>
+
+                <div className="bg-gray-50 border rounded-lg p-4 flex flex-col gap-3">
+                  <label className="text-sm font-medium text-gray-700">
+                    Tools
+                  </label>
+                  <div className="flex flex-col gap-2">
+                    {["pencil", "line", "rect"].map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setTool(t)}
+                        className={toolBtn(t)}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 border rounded-lg p-4 flex flex-col gap-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Actions
+                  </label>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={undo}
+                      disabled={!elements.length}
+                      className={`${toolBtn("")} disabled:opacity-50`}
+                    >
+                      Undo
+                    </button>
+                    <button
+                      onClick={redo}
+                      disabled={!history.length}
+                      className={`${toolBtn("")} disabled:opacity-50`}
+                    >
+                      Redo
+                    </button>
+                    <button
+                      onClick={clearCanvas}
+                      className={actionBtn("bg-red-600", "hover:bg-red-700")}
+                    >
+                      Clear
+                    </button>
+                    <button
+                      onClick={downloadImage}
+                      className={actionBtn("bg-blue-600", "hover:bg-blue-700")}
+                    >
+                      Download
+                    </button>
+                    <button
+                      onClick={saveToDB}
+                      className={actionBtn(
+                        "bg-green-600",
+                        "hover:bg-green-700"
+                      )}
+                    >
+                      Save to DB
+                    </button>
+                  </div>
+                </div>
+
+                {/* optional: show connected users or tips */}
+                <div className="bg-gray-50 border rounded-lg p-4 text-sm text-gray-600">
+                  Connected users:{" "}
+                  <span className="font-medium text-indigo-600">{userNo}</span>
+                </div>
+              </div>
+            </aside>
+
+            {/* Canvas area - grows to fill remaining space */}
+            <main className="flex-1 min-h-[60vh]">
+              <div className="h-full w-full rounded-lg border border-dashed border-gray-200 overflow-hidden">
+                <Canvas
+                  canvasRef={canvasRef}
+                  ctx={ctx}
+                  color={color}
+                  setElements={setElements}
+                  elements={elements}
+                  tool={tool}
+                  socket={socket}
+                  roomId={user?.room}
+                />
+              </div>
+            </main>
+          </div>
         </div>
       </div>
     </div>

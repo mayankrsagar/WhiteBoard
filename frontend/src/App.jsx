@@ -53,22 +53,21 @@ function App() {
       await api.post("/auth/logout");
       // eslint-disable-next-line no-unused-vars
     } catch (err) {
-      // swallow — still proceed to clear local state / redirect
-      // optionally show user a toast or console.warn(err);
+      // swallow
     }
     setLoggedIn(false);
     setUserId("");
     localStorage.clear();
-    // use a full-page redirect (safe without useNavigate)
+    // full-page redirect (safe without useNavigate here)
     window.location.href = "/login";
   };
 
-  /* ==========================================
-        ROUTER  (moved inside component tree)
-     ========================================== */
   return (
+    // top-level Router
     <Router>
-      <div className="min-h-screen w-full">
+      {/* root avoids accidental horizontal overflow */}
+      <div className="min-h-screen w-full overflow-x-hidden bg-white text-gray-900">
+        {/* Navbar is full-width but its inner content is constrained in Navbar.jsx */}
         <Navbar
           loggedIn={loggedIn}
           userId={userId}
@@ -78,6 +77,7 @@ function App() {
           onLogout={handleLogout}
         />
 
+        {/* Routes & page content */}
         <Routes>
           <Route path="/" element={<Home />} />
 
@@ -131,7 +131,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* in App.jsx protected routes */}
           <Route
             path="/profile"
             element={

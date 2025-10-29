@@ -6,7 +6,7 @@ export async function uploadImage(req, res, next) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    const user = await User.findById(req.body.userId);
+    const user = await User.findById(req.user.id || req.user._id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }

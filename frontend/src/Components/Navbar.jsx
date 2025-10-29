@@ -65,13 +65,13 @@ const Navbar = ({
           {/* Logo */}
           <Link
             to="/"
-            className="text-2xl font-bold tracking-wide hover:text-indigo-400 transition md:text-3xl"
+            className="text-2xl font-bold tracking-wide hover:text-indigo-400 transition md:text-3xl cursor-pointer text-green-500"
           >
             Whiteboard
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center space-x-6 flex-1 justify-end">
+          <div className="hidden md:flex items-center space-x-6 flex-1 justify-end gap-4">
             {loggedIn ? (
               <>
                 {renderLinks(privateLinks)}
