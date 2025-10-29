@@ -175,6 +175,21 @@ const Canvas = ({
     ctx.current = context;
   };
 
+  // inside Canvas when you want to send a frame
+  const sendFrame = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const imageData = canvas.toDataURL("image/png"); // string starts with 'data:image/png;base64,...'
+    if (!imageData) return;
+    console.log(
+      "[Canvas] sendFrame length",
+      imageData.length,
+      "roomId=",
+      roomId
+    );
+    socket.emit("drawing", { roomId, imageData });
+  };
+
   useEffect(() => {
     resizeCanvas();
     const onResize = () => resizeCanvas();
@@ -235,6 +250,7 @@ const Canvas = ({
   const endStroke = (e) => {
     e.preventDefault();
     setIsDrawing(false);
+    sendFrame();
   };
 
   /* ---------- 6.  draw everything ---------- */

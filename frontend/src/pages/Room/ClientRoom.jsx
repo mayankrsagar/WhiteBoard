@@ -77,9 +77,9 @@ const ClientRoom = ({ userNo, socket, setUsers, setUserNo }) => {
     const handleFrame = ({ imageURL }) => {
       if (imgRef.current) imgRef.current.src = imageURL;
       setFrames((f) => f + 1);
-      console.log(
-        `[ClientRoom] new frame received – ${imageURL.slice(0, 50)}…`
-      );
+      // console.log(
+      //   `[ClientRoom] new frame received – ${imageURL.slice(0, 50)}…`
+      // );
     };
 
     socket.on("message", handleMessage);

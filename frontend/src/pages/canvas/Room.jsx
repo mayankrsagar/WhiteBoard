@@ -194,7 +194,7 @@ const Room = ({ userNo, socket, setUsers, setUserNo, user }) => {
             {/* Canvas area - grows to fill remaining space */}
             <main className="flex-1 min-h-[60vh]">
               <div className="h-full w-full rounded-lg border border-dashed border-gray-200 overflow-hidden">
-                <Canvas
+                {/* <Canvas
                   canvasRef={canvasRef}
                   ctx={ctx}
                   color={color}
@@ -203,6 +203,16 @@ const Room = ({ userNo, socket, setUsers, setUserNo, user }) => {
                   tool={tool}
                   socket={socket}
                   roomId={user?.room}
+                /> */}
+                <Canvas
+                  canvasRef={canvasRef}
+                  ctx={ctx}
+                  color={color}
+                  setElements={setElements}
+                  elements={elements}
+                  tool={tool}
+                  socket={socket}
+                  roomId={user?.room ?? user?.roomId ?? user?.room_id}
                 />
               </div>
             </main>

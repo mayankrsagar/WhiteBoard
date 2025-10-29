@@ -79,10 +79,19 @@ export default function socketHandler(io) {
     socket.on("drawing", (data) => {
       if (!data.roomId) return;
       throttledBroadcast(data); // viewers receive  { imageURL: 'data:image/...' }
-      console.log(`This is backend side drawing`);
-      console.log(data);
-      console.log(data.roomId);
+      // console.log(`This is backend side drawing`);
+      // console.log(data);
+      // console.log(data.roomId);
     });
+
+    //Debug logs for backend drawing emit
+    // socket.on("drawing", (data) => {
+    //   if (!data?.roomId) {
+    //     console.warn("[drawing] missing roomId, payload:", Object.keys(data));
+    //     return;
+    //   }
+    //   throttledBroadcast(data);
+    // });
 
     /* ---------- leave room ---------- */
     socket.on("disconnect", () => {
